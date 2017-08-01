@@ -15,7 +15,8 @@ public class MonthPager extends ViewPager {
     public static int CURRENT_DAY_INDEX = 1000;
 
     private int currentPosition = CURRENT_DAY_INDEX;
-    private int cellHeight = 0;
+    private int cellHeight;
+    private int viewHeight;
     private int rowIndex = 6;
 
     private ViewPager.OnPageChangeListener viewPageChangeListener;
@@ -27,7 +28,6 @@ public class MonthPager extends ViewPager {
 
     public MonthPager(Context context) {
         this(context, null);
-        init();
     }
 
     public MonthPager(Context context, AttributeSet attrs) {
@@ -39,7 +39,7 @@ public class MonthPager extends ViewPager {
         viewPageChangeListener = new ViewPager.OnPageChangeListener() {
             @Override
             public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-                if(monthPageChangeListener != null) {
+                if (monthPageChangeListener != null) {
                     monthPageChangeListener.onPageScrolled(position, positionOffset, positionOffsetPixels);
                 }
             }
@@ -48,7 +48,7 @@ public class MonthPager extends ViewPager {
             public void onPageSelected(int position) {
                 currentPosition = position;
                 if (pageChangeByGesture) {
-                    if(monthPageChangeListener != null) {
+                    if (monthPageChangeListener != null) {
                         monthPageChangeListener.onPageSelected(position);
                     }
                     pageChangeByGesture = false;
@@ -58,7 +58,7 @@ public class MonthPager extends ViewPager {
             @Override
             public void onPageScrollStateChanged(int state) {
                 pageScrollState = state;
-                if(monthPageChangeListener != null) {
+                if (monthPageChangeListener != null) {
                     monthPageChangeListener.onPageScrollStateChanged(state);
                 }
                 pageChangeByGesture = true;
@@ -70,8 +70,8 @@ public class MonthPager extends ViewPager {
 
     @Override
     public void addOnPageChangeListener(ViewPager.OnPageChangeListener listener) {
-        if(hasPageChangeListener) {
-            Log.e("ldf","MonthPager Just Can Use Own OnPageChangeListener");
+        if (hasPageChangeListener) {
+            Log.e("ldf", "MonthPager Just Can Use Own OnPageChangeListener");
         } else {
             super.addOnPageChangeListener(listener);
         }
@@ -79,22 +79,7 @@ public class MonthPager extends ViewPager {
 
     public void addOnPageChangeListener(OnPageChangeListener listener) {
         this.monthPageChangeListener = listener;
-        Log.e("ldf","MonthPager Just Can Use Own OnPageChangeListener");
-    }
-
-    @Override
-    protected void onSizeChanged(int w, int h, int oldW, int oldH) {
-        cellHeight = h / 6;
-        super.onSizeChanged(w, h, oldW, oldH);
-    }
-
-    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        if(cellHeight > 0){
-            super.onMeasure(widthMeasureSpec,MeasureSpec.makeMeasureSpec(cellHeight * 6,
-                    MeasureSpec.EXACTLY));
-        } else {
-            super.onMeasure(widthMeasureSpec,heightMeasureSpec);
-        }
+        Log.e("ldf", "MonthPager Just Can Use Own OnPageChangeListener");
     }
 
     public void setScrollable(boolean scrollable) {
@@ -129,13 +114,15 @@ public class MonthPager extends ViewPager {
 
     public interface OnPageChangeListener {
         void onPageScrolled(int position, float positionOffset, int positionOffsetPixels);
+
         void onPageSelected(int position);
+
         void onPageScrollStateChanged(int state);
     }
 
     public int getTopMovableDistance() {
         CalendarViewAdapter calendarViewAdapter = (CalendarViewAdapter) getAdapter();
-        rowIndex = calendarViewAdapter.getPagers().get(currentPosition  % 3).getSelectedRowIndex();
+        rowIndex = calendarViewAdapter.getPagers().get(currentPosition % 3).getSelectedRowIndex();
         return cellHeight * rowIndex;
     }
 
@@ -143,8 +130,13 @@ public class MonthPager extends ViewPager {
         return cellHeight;
     }
 
-    public int getViewHeight () {
-        return cellHeight * 6;
+    public void setViewheight(int viewHeight) {
+        cellHeight = viewHeight / 6;
+        this.viewHeight = viewHeight;
+    }
+
+    public int getViewHeight() {
+        return viewHeight;
     }
 
     public int getCurrentPosition() {
@@ -157,8 +149,8 @@ public class MonthPager extends ViewPager {
 
     public int getRowIndex() {
         CalendarViewAdapter calendarViewAdapter = (CalendarViewAdapter) getAdapter();
-        rowIndex = calendarViewAdapter.getPagers().get(currentPosition  % 3).getSelectedRowIndex();
-        Log.e("ldf","getRowIndex = " + rowIndex);
+        rowIndex = calendarViewAdapter.getPagers().get(currentPosition % 3).getSelectedRowIndex();
+        Log.e("ldf", "getRowIndex = " + rowIndex);
         return rowIndex;
     }
 

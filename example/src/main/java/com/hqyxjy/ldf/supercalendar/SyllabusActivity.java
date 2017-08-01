@@ -26,7 +26,8 @@ import java.util.HashMap;
  * Created by ldf on 16/11/4.
  */
 
-public class SyllabusActivity extends AppCompatActivity{
+public class SyllabusActivity extends AppCompatActivity {
+    //为什么不使用ButterKnife，是不想让用户看到源码是产生疑问
     TextView textViewYearDisplay;
     TextView textViewMonthDisplay;
     TextView backToday;
@@ -35,6 +36,8 @@ public class SyllabusActivity extends AppCompatActivity{
     RecyclerView rvToDoList;
     TextView scrollSwitch;
     TextView themeSwitch;
+    TextView nextMonthBtn;
+    TextView lastMonthBtn;
 
     private ArrayList<Calendar> currentCalendars = new ArrayList<>();
     private CalendarViewAdapter calendarAdapter;
@@ -44,7 +47,6 @@ public class SyllabusActivity extends AppCompatActivity{
     private CalendarDate currentDate;
     private boolean initiated = false;
 
-
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -52,34 +54,44 @@ public class SyllabusActivity extends AppCompatActivity{
         context = this;
         content = (CoordinatorLayout) findViewById(R.id.content);
         monthPager = (MonthPager) findViewById(R.id.calendar_view);
+        //此处强行setViewHeight，毕竟你知道你的日历牌的高度
+        monthPager.setViewheight(Utils.dpi2px(context, 270));
         textViewYearDisplay = (TextView) findViewById(R.id.show_year_view);
         textViewMonthDisplay = (TextView) findViewById(R.id.show_month_view);
         backToday = (TextView) findViewById(R.id.back_today_button);
         scrollSwitch = (TextView) findViewById(R.id.scroll_switch);
         themeSwitch = (TextView) findViewById(R.id.theme_switch);
+        nextMonthBtn = (TextView) findViewById(R.id.next_month);
+        lastMonthBtn = (TextView) findViewById(R.id.last_month);
         rvToDoList = (RecyclerView) findViewById(R.id.list);
         rvToDoList.setHasFixedSize(true);
-        rvToDoList.setLayoutManager(new LinearLayoutManager(this));//这里用线性显示 类似于listview
+        //这里用线性显示 类似于listview
+        rvToDoList.setLayoutManager(new LinearLayoutManager(this));
         rvToDoList.setAdapter(new ExampleAdapter(this));
         initCurrentDate();
         initCalendarView();
         initToolbarClickListener();
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-    }
-
+    /**
+     * onWindowFocusChanged回调时，将当前月的种子日期修改为今天
+     *
+     * @return void
+     */
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
-        if(hasFocus && !initiated) {
+        if (hasFocus && !initiated) {
             refreshMonthPager();
             initiated = true;
         }
     }
 
+    /**
+     * 初始化对应功能的listener
+     *
+     * @return void
+     */
     private void initToolbarClickListener() {
         backToday.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -90,11 +102,11 @@ public class SyllabusActivity extends AppCompatActivity{
         scrollSwitch.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(calendarAdapter.getCalendarType() == CalendarAttr.CalendayType.WEEK) {
-                    Utils.scrollTo(content , rvToDoList , monthPager.getViewHeight() , 200);
+                if (calendarAdapter.getCalendarType() == CalendarAttr.CalendayType.WEEK) {
+                    Utils.scrollTo(content, rvToDoList, monthPager.getViewHeight(), 200);
                     calendarAdapter.switchToMonth();
                 } else {
-                    Utils.scrollTo(content , rvToDoList , monthPager.getCellHeight() , 200);
+                    Utils.scrollTo(content, rvToDoList, monthPager.getCellHeight(), 200);
                     calendarAdapter.switchToWeek(monthPager.getRowIndex());
                 }
             }
@@ -105,32 +117,59 @@ public class SyllabusActivity extends AppCompatActivity{
                 refreshSelectBackground();
             }
         });
+        nextMonthBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                monthPager.setCurrentItem(monthPager.getCurrentPosition() + 1);
+            }
+        });
+        lastMonthBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                monthPager.setCurrentItem(monthPager.getCurrentPosition() - 1);
+            }
+        });
     }
 
+    /**
+     * 初始化currentDate
+     *
+     * @return void
+     */
     private void initCurrentDate() {
         currentDate = new CalendarDate();
         textViewYearDisplay.setText(currentDate.getYear() + "年");
         textViewMonthDisplay.setText(currentDate.getMonth() + "");
     }
 
+    /**
+     * 初始化CustomDayView，并作为CalendarViewAdapter的参数传入
+     *
+     * @return void
+     */
     private void initCalendarView() {
         initListener();
-        CustomDayView customDayView = new CustomDayView(context , R.layout.custom_day);
+        CustomDayView customDayView = new CustomDayView(context, R.layout.custom_day);
         calendarAdapter = new CalendarViewAdapter(
-                context ,
-                onSelectDateListener ,
-                CalendarAttr.CalendayType.MONTH ,
+                context,
+                onSelectDateListener,
+                CalendarAttr.CalendayType.MONTH,
                 customDayView);
         initMarkData();
         initMonthPager();
     }
 
+    /**
+     * 初始化标记数据，HashMap的形式，可自定义
+     *
+     * @return void
+     */
     private void initMarkData() {
-        HashMap<String , String> markData = new HashMap<>();
-        markData.put("2017-8-9" , "1");
-        markData.put("2017-7-9" , "0");
-        markData.put("2017-6-9" , "1");
-        markData.put("2017-6-10" , "0");
+        HashMap<String, String> markData = new HashMap<>();
+        markData.put("2017-8-9", "1");
+        markData.put("2017-7-9", "0");
+        markData.put("2017-6-9", "1");
+        markData.put("2017-6-10", "0");
         calendarAdapter.setMarkData(markData);
     }
 
@@ -143,7 +182,7 @@ public class SyllabusActivity extends AppCompatActivity{
 
             @Override
             public void onSelectOtherMonth(int offset) {
-                //偏移量 -1表示上一个月 ， 1表示下一个月
+                //偏移量 -1表示刷新成上一个月数据 ， 1表示刷新成下一个月数据
                 monthPager.selectOtherMonth(offset);
             }
         };
@@ -155,6 +194,11 @@ public class SyllabusActivity extends AppCompatActivity{
         textViewMonthDisplay.setText(date.getMonth() + "");
     }
 
+    /**
+     * 初始化monthPager，MonthPager继承自ViewPager
+     *
+     * @return void
+     */
     private void initMonthPager() {
         monthPager.setAdapter(calendarAdapter);
         monthPager.setCurrentItem(MonthPager.CURRENT_DAY_INDEX);
@@ -174,7 +218,7 @@ public class SyllabusActivity extends AppCompatActivity{
             public void onPageSelected(int position) {
                 mCurrentPage = position;
                 currentCalendars = calendarAdapter.getPagers();
-                if(currentCalendars.get(position % currentCalendars.size()) instanceof Calendar){
+                if (currentCalendars.get(position % currentCalendars.size()) instanceof Calendar) {
                     CalendarDate date = currentCalendars.get(position % currentCalendars.size()).getSeedDate();
                     currentDate = date;
                     textViewYearDisplay.setText(date.getYear() + "年");
@@ -195,11 +239,10 @@ public class SyllabusActivity extends AppCompatActivity{
     private void refreshMonthPager() {
         CalendarDate today = new CalendarDate();
         calendarAdapter.notifyDataChanged(today);
-        refreshClickDate(today);
     }
 
-    private void refreshSelectBackground(){
-        ThemeDayView themeDayView = new ThemeDayView(context , R.layout.custom_day_focus);
+    private void refreshSelectBackground() {
+        ThemeDayView themeDayView = new ThemeDayView(context, R.layout.custom_day_focus);
         calendarAdapter.setCustomDayRenderer(themeDayView);
         calendarAdapter.notifyDataSetChanged();
         calendarAdapter.notifyDataChanged(new CalendarDate());

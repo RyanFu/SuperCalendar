@@ -22,10 +22,10 @@ public abstract class DayView extends RelativeLayout implements IDayRenderer {
     protected int layoutResource;
 
     /**
-     * Constructor. Sets up the DayView with a custom layout resource.
+     * 构造器 传入资源文件创建DayView
      *
-     * @param context
-     * @param layoutResource the layout resource to use for the DayView
+     * @param layoutResource 资源文件
+     * @param context 上下文
      */
     public DayView(Context context, int layoutResource) {
         super(context);
@@ -35,9 +35,10 @@ public abstract class DayView extends RelativeLayout implements IDayRenderer {
     }
 
     /**
-     * Sets the layout resource for a custom DayView.
+     * 为自定义的DayView设置资源文件
      *
-     * @param layoutResource
+     * @param layoutResource 资源文件
+     * @return CalendarDate 修改后的日期
      */
     private void setupLayoutResource(int layoutResource) {
         View inflated = LayoutInflater.from(getContext()).inflate(layoutResource, this);
@@ -54,13 +55,22 @@ public abstract class DayView extends RelativeLayout implements IDayRenderer {
     }
 
     @Override
-    public void drawDay(Canvas canvas , Day day) {
+    public void drawDay(Canvas canvas, Day day) {
         this.day = day;
         refreshContent();
         int saveId = canvas.save();
-        canvas.translate(day.getPosCol() * getMeasuredWidth(),
+        canvas.translate(getTranslateX(canvas, day),
                 day.getPosRow() * getMeasuredHeight());
         draw(canvas);
         canvas.restoreToCount(saveId);
+    }
+
+    private int getTranslateX(Canvas canvas, Day day) {
+        int dx;
+        int canvasWidth = canvas.getWidth() / 7;
+        int viewWidth = getMeasuredWidth();
+        int moveX = (canvasWidth - viewWidth) / 2;
+        dx = day.getPosCol() * canvasWidth + moveX;
+        return dx;
     }
 }
